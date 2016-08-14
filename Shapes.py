@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.ndimage as ndi
 import cv2
-from scipy.misc import imsave, imresize
+from scipy.misc import imsave
 
 class Shape:
 
@@ -271,14 +271,16 @@ def generateShape(shape:Shape, n=1000, seed=None):
 def saveShapes(shape:Shape, fn):
     import os
 
+    n = 60000
     path = r'data/' + fn + "/"
     if not os.path.exists(path): os.makedirs(path)
 
-    for i, (name, s) in enumerate(generateShape(shape, n=60000)):
+    for i, (name, s) in enumerate(generateShape(shape, n=n)):
         file = path + '%d.png' % (i+1)
         imsave(file, s)
 
-        if i % 600 == 0: print('%0.2f completed (%s)' % (i // 600, fn))
+        limits = n // 100
+        if i % limits == 0: print('%0.2f completed (%s)' % (i / n, fn))
 
 if __name__ == "__main__":
     '''
