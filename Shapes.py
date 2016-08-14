@@ -22,21 +22,20 @@ class Shape:
     def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
         pass
 
-    def _checkPoints(self, pt1, pt2):
+    def _checkPoints(self, pts):
         minimum = 16
         maximum = 200
 
-        pt1[0] = pt1[0] if pt1[0] > minimum else minimum
-        pt1[1] = pt1[1] if pt1[1] > minimum else minimum
-        pt2[0] = pt2[0] if pt2[0] > minimum else minimum
-        pt2[1] = pt2[1] if pt2[1] > minimum else minimum
+        for i, pt in enumerate(pts):
+            pt[0] = pt[0] if pt[0] > minimum else minimum
+            pt[1] = pt[1] if pt[1] > minimum else minimum
 
-        pt1[0] = pt1[0] if pt1[0] < maximum else maximum
-        pt1[1] = pt1[1] if pt1[1] < maximum else maximum
-        pt2[0] = pt2[0] if pt2[0] < maximum else maximum
-        pt2[1] = pt2[1] if pt2[1] < maximum else maximum
+            pt[0] = pt[0] if pt[0] < maximum else maximum
+            pt[1] = pt[1] if pt[1] < maximum else maximum
 
-        return tuple(pt1), tuple(pt2)
+            pts[i] = (pt[0], pt[1])
+
+        return pts
 
 
     def __transform_matrix_offset_center(self, matrix, x, y):
@@ -120,7 +119,7 @@ class Square(Shape):
         size = np.random.randint(0, 100, dtype=np.uint8) + 8
         pt2 = [pt1[0] + size, pt1[1] + size]
 
-        pt1, pt2 = self._checkPoints(pt1, pt2)
+        pt1, pt2 = self._checkPoints([pt1, pt2])
 
         cv2.rectangle(x, pt1, pt2, (0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
 
@@ -138,7 +137,7 @@ class Rectangle(Shape):
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
         pt2 = [np.random.randint(0, self.height, dtype=np.uint8), np.random.randint(0, self.height, dtype=np.uint8)]
 
-        pt1, pt2 = self._checkPoints(pt1, pt2)
+        pt1, pt2 = self._checkPoints([pt1, pt2])
 
         cv2.rectangle(x, pt1, pt2, (0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
 
@@ -159,9 +158,9 @@ class Parallelogram(Shape):
         size = np.random.randint(0, 100, dtype=np.uint8) + 8
         pt2 = [pt1[0] + size, pt1[1] + size]
 
-        pt1, pt2 = self._checkPoints(pt1, pt2)
+        pt1, pt2 = self._checkPoints([pt1, pt2])
 
-        cv2.rectangle(x, pt1, pt2, (0, 0, 0), thickness=2, lineType=cv2.LINE_AA)
+        cv2.rectangle(x, pt1, pt2, (0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
 
         x = self._transform(x, rotation=rotation, shear=shear, height_shift=height_shift, width_shift=width_shift)
 
@@ -185,10 +184,9 @@ class Trapezium(Shape):
         angle = np.random.randint(25, 45) / 180
 
         pt3 = [mid * 2 + int(np.cos(angle) * mid), depth + pt1[1]]
-        pt4 = [mid / 2 - int(np.cos(angle) * mid), depth + pt1[1]]
+        pt4 = [mid // 2 - int(np.cos(angle) * mid), depth + pt1[1]]
 
-        pt1, pt2 = self._checkPoints(pt1, pt2)
-        pt3, pt4 = self._checkPoints(pt3, pt4)
+        pt1, pt2, pt3, pt4 = self._checkPoints([pt1, pt2, pt3, pt4])
 
         cv2.line(x, pt1, pt2, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
         cv2.line(x, pt2, pt3, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
@@ -197,6 +195,32 @@ class Trapezium(Shape):
 
         x = self._transform(x, rotation=rotation, shear=0, height_shift=height_shift, width_shift=width_shift)
         return x
+
+class Triangle(Shape):
+
+    def __init__(self):
+        super(Triangle, self).__init__('triangle')
+
+    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+        x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
+
+        pt1 = [np.random.randint(0, self.height / 2), np.random.randint(0, self.height / 2)]
+
+        height = np.random.randint(0, 100, dtype=np.uint8) + 8
+        angle = np.random.randint(25, 75) / 180
+
+        pt2 = [height * 2 + int(np.cos(90 - angle) * height), height + pt1[1]]
+        pt3 = [height // 2 - int(np.cos(90 - angle) * height), height + pt1[1]]
+
+        pt1, pt2, pt3 = self._checkPoints([pt1, pt2, pt3])
+
+        cv2.line(x, pt1, pt2, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
+        cv2.line(x, pt2, pt3, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
+        cv2.line(x, pt3, pt1, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
+
+        x = self._transform(x, rotation=rotation, shear=0, height_shift=height_shift, width_shift=width_shift)
+        return x
+
 
 def generateShape(shape:Shape, n=1000, height_shift=0, width_shift=0, rotation=None, shear=None, seed=None):
     if seed:
@@ -211,8 +235,8 @@ def generateShape(shape:Shape, n=1000, height_shift=0, width_shift=0, rotation=N
 if __name__ == "__main__":
     import seaborn as sns
 
-    square = Trapezium()
+    square = Triangle()
 
-    for sq in generateShape(square, n=5, height_shift=5. / 224, width_shift=5. / 224, rotation=0, shear=0.0, seed=0):
+    for sq in generateShape(square, n=5, height_shift=5. / 224, width_shift=5. / 224, rotation=45, shear=0.0, seed=0):
         sns.plt.imshow(sq[1])
         sns.plt.show()
