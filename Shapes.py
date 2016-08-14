@@ -111,7 +111,7 @@ class Square(Shape):
     def __init__(self):
         super(Square, self).__init__("square")
 
-    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+    def createShape(self, height_shift=10, width_shift=10, rotation=None, shear=0.5):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
@@ -131,7 +131,7 @@ class Rectangle(Shape):
     def __init__(self):
         super(Rectangle, self).__init__("rectangle")
 
-    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+    def createShape(self, height_shift=10, width_shift=10, rotation=60, shear=0.5):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255 # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
@@ -150,7 +150,7 @@ class Parallelogram(Shape):
     def __init__(self):
         super(Parallelogram, self).__init__('parallelogram')
 
-    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+    def createShape(self, height_shift=10, width_shift=10, rotation=45, shear=0.5):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255 # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
@@ -171,7 +171,7 @@ class Trapezium(Shape):
     def __init__(self):
         super(Trapezium, self).__init__('trapezium')
 
-    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+    def createShape(self, height_shift=10, width_shift=10, rotation=45, shear=None):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8),
@@ -180,7 +180,7 @@ class Trapezium(Shape):
         pt2 = [pt1[0] + np.random.randint(8, 96), pt1[1]]
 
         mid = int((pt2[0] + pt1[0]) / 2)
-        depth = np.random.randint(0, 100, dtype=np.uint8) + 8
+        depth = np.random.randint(15, 100, dtype=np.uint8) + 8
         angle = np.random.randint(25, 45) / 180
 
         pt3 = [mid * 2 + int(np.cos(angle) * mid), depth + pt1[1]]
@@ -201,16 +201,21 @@ class Triangle(Shape):
     def __init__(self):
         super(Triangle, self).__init__('triangle')
 
-    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+    def createShape(self, height_shift=10, width_shift=10, rotation=60, shear=None):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2), np.random.randint(0, self.height / 2)]
 
-        height = np.random.randint(0, 100, dtype=np.uint8) + 8
+        height = np.random.randint(15, 100, dtype=np.uint8) + 8
         angle = np.random.randint(25, 75) / 180
 
         pt2 = [height * 2 + int(np.cos(90 - angle) * height), height + pt1[1]]
-        pt3 = [height // 2 - int(np.cos(90 - angle) * height), height + pt1[1]]
+
+        rightAngledProba = 0.33
+        if np.random.random() >= rightAngledProba:
+            pt3 = [height // 2 - int(np.cos(90 - angle) * height), height + pt1[1]]
+        else:
+            pt3 = [pt1[0], height + pt1[1]]
 
         pt1, pt2, pt3 = self._checkPoints([pt1, pt2, pt3])
 
@@ -221,22 +226,54 @@ class Triangle(Shape):
         x = self._transform(x, rotation=rotation, shear=0, height_shift=height_shift, width_shift=width_shift)
         return x
 
+class Circle(Shape):
 
-def generateShape(shape:Shape, n=1000, height_shift=0, width_shift=0, rotation=None, shear=None, seed=None):
+    def __init__(self):
+        super(Circle, self).__init__("circle")
+
+    def createShape(self, height_shift=None, width_shift=None, rotation=None, shear=None):
+        x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
+
+        center = (np.random.randint(50, 3 * self.height / 4), np.random.randint(50, 3 * self.height / 4))
+        radius = np.random.randint(20, 75)
+
+        cv2.circle(x, center, radius, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
+
+        return x
+
+class Ellipse(Shape):
+
+    def __init__(self):
+        super(Ellipse, self).__init__('ellipse')
+
+    def createShape(self, height_shift=0, width_shift=0, rotation=None, shear=None):
+        x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
+
+        center = (np.random.randint(50, 3 * self.height / 4), np.random.randint(50, 3 * self.height / 4))
+        axis = (np.random.randint(20, 75), np.random.randint(10, 50))
+        angle = np.random.randint(0, 45)
+        startAngle = 0
+        endAngle = 360
+
+        cv2.ellipse(x, center, axis, angle, startAngle, endAngle, color=(0, 0, 0), thickness=1, lineType=cv2.LINE_AA)
+
+        return x
+
+def generateShape(shape:Shape, n=1000, seed=None):
     if seed:
         np.random.seed(seed)
 
     for i in range(n):
         name = shape.getShapeClass()
-        s = shape.createShape(height_shift=height_shift, width_shift=width_shift, rotation=rotation, shear=shear)
+        s = shape.createShape()
 
         yield (name, s)
 
 if __name__ == "__main__":
     import seaborn as sns
 
-    square = Triangle()
+    square = Ellipse()
 
-    for sq in generateShape(square, n=5, height_shift=5. / 224, width_shift=5. / 224, rotation=45, shear=0.0, seed=0):
+    for sq in generateShape(square, n=5, seed=0):
         sns.plt.imshow(sq[1])
         sns.plt.show()
