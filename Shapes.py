@@ -3,7 +3,6 @@ import scipy.ndimage as ndi
 import cv2
 from scipy.misc import imsave, imresize
 
-
 class Shape:
 
     def __init__(self, name):
@@ -269,11 +268,53 @@ def generateShape(shape:Shape, n=1000, seed=None):
 
         yield (name, s)
 
+def saveShapes(shape:Shape, fn):
+    import os
+
+    path = r'data/' + fn + "/"
+    if not os.path.exists(path): os.makedirs(path)
+
+    for i, (name, s) in enumerate(generateShape(shape, n=60000)):
+        file = path + '%d.png' % (i+1)
+        imsave(file, s)
+
+        if i % 600 == 0: print('%0.2f completed (%s)' % (i // 600, fn))
+
 if __name__ == "__main__":
-    import seaborn as sns
+    '''
+    Generator Script
 
-    square = Ellipse()
+    -  Generates 50,000 samples training, 10,000 testing / validation images
+    -  Puts them in the correct directory, so that we can use ImageDataGenerator.flow_from_directory() in Keras
+       to load the images from specific directories into main memory
+    '''
+    import os
+    if not os.path.exists('data/'): os.makedirs('data/')
 
-    for sq in generateShape(square, n=5, seed=0):
-        sns.plt.imshow(sq[1])
-        sns.plt.show()
+    # Square generator
+    square = Square()
+    saveShapes(square, square.getShapeClass())
+
+    # Rectangle generator
+    rect = Rectangle()
+    saveShapes(rect, rect.getShapeClass())
+
+    # Parallelogram generator
+    parallelogram = Parallelogram()
+    saveShapes(parallelogram, parallelogram.getShapeClass())
+
+    # Trapezium generator
+    trap = Trapezium()
+    saveShapes(trap, trap.getShapeClass())
+
+    # Trangle generator
+    tri = Triangle()
+    saveShapes(tri, tri.getShapeClass())
+
+    # Circle generator
+    circle = Circle()
+    saveShapes(circle, circle.getShapeClass())
+
+    # Ellipse generator
+    ellipse = Ellipse()
+    saveShapes(ellipse, ellipse.getShapeClass())
