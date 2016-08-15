@@ -280,7 +280,7 @@ def saveShapes(shape:Shape, fn):
         imsave(file, s)
 
         limits = n // 100
-        if i % limits == 0: print('%0.2f completed (%s)' % (i / n, fn))
+        if i % limits == 0: print('%f percent completed (%s)' % (i / n, fn))
 
 if __name__ == "__main__":
     '''
@@ -291,32 +291,36 @@ if __name__ == "__main__":
        to load the images from specific directories into main memory
     '''
     import os
+    from multiprocessing import Pool
+
     if not os.path.exists('data/'): os.makedirs('data/')
+    pool = Pool()
 
     # Square generator
     square = Square()
-    saveShapes(square, square.getShapeClass())
 
     # Rectangle generator
     rect = Rectangle()
-    saveShapes(rect, rect.getShapeClass())
 
     # Parallelogram generator
     parallelogram = Parallelogram()
-    saveShapes(parallelogram, parallelogram.getShapeClass())
 
     # Trapezium generator
     trap = Trapezium()
-    saveShapes(trap, trap.getShapeClass())
 
     # Trangle generator
     tri = Triangle()
-    saveShapes(tri, tri.getShapeClass())
 
     # Circle generator
     circle = Circle()
-    saveShapes(circle, circle.getShapeClass())
 
     # Ellipse generator
     ellipse = Ellipse()
-    saveShapes(ellipse, ellipse.getShapeClass())
+
+    shapes = [square, rect, parallelogram, trap, tri, circle, ellipse]
+
+    for shape in shapes:
+        pool.apply_async(saveShapes, (shape, shape.getShapeClass()))
+
+    pool.close()
+    pool.join()
