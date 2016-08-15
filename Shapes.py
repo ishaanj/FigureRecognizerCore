@@ -110,7 +110,7 @@ class Square(Shape):
     def __init__(self):
         super(Square, self).__init__("square")
 
-    def createShape(self, height_shift=10, width_shift=10, rotation=None, shear=0.5):
+    def createShape(self, height_shift=0.2, width_shift=0.2, rotation=None, shear=0.5):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
@@ -130,7 +130,7 @@ class Rectangle(Shape):
     def __init__(self):
         super(Rectangle, self).__init__("rectangle")
 
-    def createShape(self, height_shift=10, width_shift=10, rotation=60, shear=0.5):
+    def createShape(self, height_shift=0.2, width_shift=0.2, rotation=60, shear=0.5):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255 # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
@@ -149,12 +149,12 @@ class Parallelogram(Shape):
     def __init__(self):
         super(Parallelogram, self).__init__('parallelogram')
 
-    def createShape(self, height_shift=10, width_shift=10, rotation=45, shear=0.5):
+    def createShape(self, height_shift=0.2, width_shift=0.2, rotation=45, shear=0.8):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255 # Create a white image
 
-        pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8), np.random.randint(0, self.height / 2, dtype=np.uint8)]
+        pt1 = [np.random.randint(0, self.height / 2), np.random.randint(0, self.height / 2)]
 
-        size = np.random.randint(0, 100, dtype=np.uint8) + 8
+        size = np.random.randint(20, 80) + 8
         pt2 = [pt1[0] + size, pt1[1] + size]
 
         pt1, pt2 = self._checkPoints([pt1, pt2])
@@ -170,7 +170,7 @@ class Trapezium(Shape):
     def __init__(self):
         super(Trapezium, self).__init__('trapezium')
 
-    def createShape(self, height_shift=10, width_shift=10, rotation=45, shear=None):
+    def createShape(self, height_shift=0.2, width_shift=0.2, rotation=45, shear=None):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2, dtype=np.uint8),
@@ -200,7 +200,7 @@ class Triangle(Shape):
     def __init__(self):
         super(Triangle, self).__init__('triangle')
 
-    def createShape(self, height_shift=10, width_shift=10, rotation=60, shear=None):
+    def createShape(self, height_shift=0.2, width_shift=0.2, rotation=60, shear=None):
         x = np.ones((self.height, self.width, self.channels), np.uint8) * 255  # Create a white image
 
         pt1 = [np.random.randint(0, self.height / 2), np.random.randint(0, self.height / 2)]
@@ -271,16 +271,27 @@ def generateShape(shape:Shape, n=1000, seed=None):
 def saveShapes(shape:Shape, fn):
     import os
 
-    n = 60000
-    path = r'data/' + fn + "/"
-    if not os.path.exists(path): os.makedirs(path)
+    n = 50000
+    n2 = 10000
+    trainpath = r'data/train/' + fn + "/"
+    testpath = r'data/test/' + fn + "/"
+
+    if not os.path.exists(trainpath): os.makedirs(trainpath)
+    if not os.path.exists(testpath): os.makedirs(testpath)
 
     for i, (name, s) in enumerate(generateShape(shape, n=n)):
-        file = path + '%d.png' % (i+1)
+        file = trainpath + '%d.png' % (i+1)
         imsave(file, s)
 
         limits = n // 100
-        if i % limits == 0: print('%f percent completed (%s)' % (i / n, fn))
+        if i % limits == 0: print('%d percent completed (%s) - training data' % (i / n * 100, fn))
+
+    for i, (name, s) in enumerate(generateShape(shape, n=n2)):
+        file = testpath + '%d.png' % (i+1)
+        imsave(file, s)
+
+        limits = n2 // 100
+        if i % limits == 0: print('%d percent completed (%s) - testing data' % (i / n2 * 100, fn))
 
 if __name__ == "__main__":
     '''
@@ -326,4 +337,6 @@ if __name__ == "__main__":
     pool.close()
     pool.join()
     '''
-    pass
+
+
+
