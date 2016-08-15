@@ -290,6 +290,7 @@ if __name__ == "__main__":
     -  Puts them in the correct directory, so that we can use ImageDataGenerator.flow_from_directory() in Keras
        to load the images from specific directories into main memory
     '''
+    '''
     import os
     from multiprocessing import Pool
 
@@ -324,3 +325,5 @@ if __name__ == "__main__":
 
     pool.close()
     pool.join()
+    '''
+    pass
